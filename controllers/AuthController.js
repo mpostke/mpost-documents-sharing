@@ -59,7 +59,8 @@ exports.register = [
 							lastName: req.body.lastName,
 							email: req.body.email,
 							password: hash,
-							confirmOTP: otp
+							confirmOTP: otp,
+							
 						}
 					);
 					// Html email body
@@ -72,7 +73,8 @@ exports.register = [
 							_id: user._id,
 							firstName: user.firstName,
 							lastName: user.lastName,
-							email: user.email
+							email: user.email,
+							
 						};
 						return apiResponse.successResponseWithData(res,"Registration Success.", userData);
 					});

@@ -1,0 +1,88 @@
+${LoginController.getInstance().userDetail.value.userId}
+
+
+https://localhost:7245/api/v2.0/ExpenseType?Merchantid=C145BB88-6983-40AD-A4E2-14C2B60DC662 DONE
+https://localhost:7245/api/store?UserId=1426 DONE
+https://localhost:7245/api/Country/get-country-subscription-plan/?CountryId=15&UserId=1425 DONE
+https://localhost:7245/api/Country/get-country-payment-method?userid=1425 DONE
+
+Vehicle-[HttpDelete("{VehicleId}")] -- MerchantId 
+
+Country-HttpDelete("{CountryId}")]--UserId
+       [HttpGet("get-country-payment-method")]-- int UserId DONE
+       [HttpGet("get-country-devices")]-- UserId 
+       [HttpDelete("delete-country-devices/{Id}")]-- UserId
+       [HttpGet("get-country-subscription-plan")]-- UserId DONE
+       [HttpDelete("delete-country-subscription-plan/{Id}")]-- UserId
+Location --[HttpDelete("{lcoationId}")]--UserId
+         
+ Brand --[HttpGet("GetBrands")]--UserId
+
+tax--HttpGet("GetTaxCategory")]--int UserId
+        
+Merchant -- HttpGet-- UserId
+           [HttpDelete("{merchantId}")]-- UserId
+
+Shippment --    [HttpGet("available-address-details")]    --int Userid,
+       [         HttpGet("get-shipment-address/{shipmentAddressId}")]--int UserId
+              [HttpDelete("delete-address/{shipmentAddressId}")] --int UserId
+        
+ 
+Store --[HttpGet]-- int UserId
+            [HttpDelete("{id}")]--int UserId
+            [HttpDelete("delete-store-payment-method/{Id}")]-- int UserId
+ Category --[HttpDelete("{categoryId}")]--[FromQuery] int StoreId
+  Credit  --[HttpDelete("delete-credit-customers/{Id}")]--int Storeid
+            [HttpDelete("delete-credit-statement/{Id}")]--storeid
+Customer --HttpDelete-- int StoreId
+
+Discount --  HttpDelete-- int StoreId
+Expense--[HttpDelete]--int StoreId,int UserId
+ExpenseType--HttpDelete--int StoreId
+
+order-- initiated-orders-- int UserId, , int StoreId
+       get-orderreturndetailbyid--int UserId, int Storeid
+        save-reorder-user-cart-- int UserId
+        save-order-address-- UserId
+		get-order-tracking--UserId
+Product --[HttpDelete("{productId}")]--[FromQuery] string MerchantId
+          GetProductData--int StoreId, int UserId
+         
+REceipt--[HttpGet]--int storeId,
+       HttpDelete--int StoreId
+Shift --deleteShift--int StoreId
+      --deleteShiftinfoById --StoreId
+	  getUserShift--StoreId
+  Storecurrency-- HttpDelete--StoreId
+       
+Subscription -- HttpDelete("{Id}")--int userid
+                get-merchant-device-- int UserId
+                delete-merchant-device/{Id}--UserId
+                get-merchant-device-maintenance-- int UserId
+				delete-merchant-device-maintenance/{Id}--int UserId
+                get-merchant-payment--int UserId
+         [HttpDelete("delete-merchant-payment/{Id}")]--int UserId
+       [HttpGet("get-merchant-subscription")]--int UserId
+         [HttpDelete("delete-merchant-subscription/{Id}")]--int UserId
+        [HttpGet("get-icp-payment-method")]-int UserId
+        [HttpDelete("delete-icp-payment-method/{Id}")]--int UserId
+       [HttpGet("get-ycp-payment-method")]--int UserId
+         [HttpDelete("delete-ycp-payment-method/{Id}")]--int UserId
+      Support Controller --HttpDelete--int UserId
+        Tax 
+             [HttpDelete("{Id}")]--int UserId
+        
+ [HttpDelete("DeleteTax")]-int UserId
+Version --
+         [HttpDelete]--UserId
+
+Country-- Put, post    -- model class -- UserId 
+CountryRequest  -- model class -- UserId 
+--add-country-subscription-plan , 	update-country-subscription-plan -- UserId 
+add-icp-payment-method,update-icp-payment-method,add-ycp-payment-method,update-ycp-payment-method-- UserId 
+Subscription --post , put-- UserId     
+get-merchant-subscription-- UserId
+Publishproductbase--UserId DONE
+Product-UpdateBatch-- StoreId, UserId DONE
+update-consumers-return--StoreId DONE
+        
