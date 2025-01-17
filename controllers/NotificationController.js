@@ -32,11 +32,11 @@ exports.markNotificationAsRead = async (req, res) => {
 
   try {
     // Validate the ObjectId
-    if (!mongoose.Types.ObjectId.isValid(notificationId)) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid notification ID" });
     }
 
-    const notification = await Notification.findById(is);
+    const notification = await Notification.findById(id);
 
     if (!notification) {
       return res.status(404).json({ message: "Notification not found" });
@@ -48,6 +48,7 @@ exports.markNotificationAsRead = async (req, res) => {
 
     res.status(200).json({ message: "Notification marked as read" });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ message: "Error marking notification as read", error });
   }
 };
