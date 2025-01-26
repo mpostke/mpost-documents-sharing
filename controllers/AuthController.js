@@ -161,6 +161,40 @@ exports.login = [
 		}
 	}];
 
+
+	exports.userDetails = [
+		auth,
+		(req, res) => {
+			try {
+				const errors = validationResult(req);
+				if (!errors.isEmpty()) {
+					return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
+				}else {
+					UserModel.findOne({email : req.user.email}).then(user => {
+						if (user) {
+							console.log("User: ", user);
+							let userData = {
+								_id: user._id,
+								firstName: user.firstName,
+								lastName: user.lastName,
+								email: user.email,
+								phoneNumber: user.phoneNumber,
+								createdAt: user.createdAt,
+								updateAt: user.updatedAt,
+							};
+							return apiResponse.successResponseWithData(res,"User data.", userData);
+							//Compare given password with db's hash.
+							
+						}else{
+							return apiResponse.unauthorizedResponse(res, "Email is wrong.");
+						}
+					});
+				}
+			} catch (err) {
+				return apiResponse.ErrorResponse(res, err);
+			}
+		}];
+
 /**
  * Verify Confirm otp.
  *
