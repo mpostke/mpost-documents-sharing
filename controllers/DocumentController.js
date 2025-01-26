@@ -18,41 +18,47 @@ exports.sendDocument = async (req, res) => {
     try {
       const { receiversEmail, documentName, isPublic, isProtected, password } = req.body;
   
-      if (!req.file) {
-        return res.status(400).json({ message: 'File is required' });
+      if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ message: "At least one file is required" });
       }
+
+      console.log(req.files);
   
       // Validate password if isProtected is true
       if (isProtected && (!password || password.trim() === "")) {
         return res.status(400).json({ message: 'Password is required for protected documents' });
       }
-  
-      const document = new Document({
-        sender: req.user._id, // Assuming `req.user` is populated by middleware
-        receivers: receiversEmail.split(',').map(email => ({
-          email: email.trim(),
-          read: false,
-        })), // Support for multiple receivers
-        documentName,
-        filePath: req.file.path,
-        fileSize: req.file.size,
-        isPublic: isPublic || false, // Default to false
-        isProtected: isProtected || false, // Default to false
-        password: isProtected ? password : undefined, // Set password only if protected
+
+      const documentPromises = req.files.map((file, index) => {
+
+        return new Document({
+          sender: req.user._id, // Assuming `req.user` is populated by middleware
+          receivers: receiversEmail.split(',').map(email => ({
+            email: email.trim(),
+            read: false,
+          })), // Support for multiple receivers
+          documentName,
+          filePath: file.path,
+          fileSize: file.size,
+          isPublic: isPublic || false, // Default to false
+          isProtected: isProtected || false, // Default to false
+          password: isProtected ? password : undefined, // Set password only if protected
+        });
       });
   
-      await document.save();
+  
+      const shared_documents = await Document.insertMany(documentPromises);
   
       res.status(201).json({
-        message: 'Document sent successfully',
-        document,
+        message: 'Documents sent successfully',
+        shared_documents,
       });
     } catch (error) {
         fs.unlink(req.file.path, (err) => {
             if (err) console.error(`Error deleting file: ${req.file.path}`, err);
           });
       res.status(500).json({
-        message: 'Error sending document',
+        message: 'Error sending documents',
         error: error.message,
       });
     }
@@ -149,4 +155,4 @@ exports.listReceivingDocuments = async (req, res) => {
   };
   
 
-exports.uploadMiddleware = upload.single('file');
+exports.uploadMiddleware = upload.array("files", 10);

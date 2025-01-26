@@ -8,6 +8,8 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const mailer = require("../helpers/mailer");
 const { constants } = require("../helpers/constants");
+const auth = require("../middlewares/jwt");
+var mongoose = require("mongoose");
 
 /**
  * User registration.
@@ -25,8 +27,7 @@ exports.register = [
 		.isAlphanumeric().withMessage("First name has non-alphanumeric characters."),
 	body("lastName").isLength({ min: 1 }).trim().withMessage("Last name must be specified.")
 		.isAlphanumeric().withMessage("Last name has non-alphanumeric characters."),
-	body("email").isLength({ min: 1 }).trim().withMessage("Email must be specified.")
-		.isEmail().withMessage("Email must be a valid email address.").custom((value) => {
+	body("email").isLength({ min: 1 }).trim().withMessage("Email must be specified.").custom((value) => {
 			return UserModel.findOne({email : value}).then((user) => {
 				if (user) {
 					return Promise.reject("E-mail already in use");
@@ -105,8 +106,7 @@ exports.register = [
  * @returns {Object}
  */
 exports.login = [
-	body("email").isLength({ min: 1 }).trim().withMessage("Email must be specified.")
-		.isEmail().withMessage("Email must be a valid email address."),
+	body("email").isLength({ min: 1 }).trim().withMessage("Email must be specified."),
 	body("password").isLength({ min: 1 }).trim().withMessage("Password must be specified."),
 	sanitizeBody("email").escape(),
 	sanitizeBody("password").escape(),
@@ -264,3 +264,73 @@ exports.resendConfirmOtp = [
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}];
+
+
+
+	exports.userUpdate = [
+		auth,
+		// Validate fields.
+	body("firstName").isLength({ min: 1 }).trim().withMessage("First name must be specified.")
+	.isAlphanumeric().withMessage("First name has non-alphanumeric characters."),
+	body("lastName").isLength({ min: 1 }).trim().withMessage("Last name must be specified.")
+		.isAlphanumeric().withMessage("Last name has non-alphanumeric characters."),
+	body("email").isLength({ min: 1 }).trim().withMessage("Email must be specified.")
+		.withMessage("Email must be a valid email address.").custom((value) => {
+			return UserModel.find({email : value}).then((users) => {
+				if (users.length > 1) {
+					return Promise.reject("E-mail already in use");
+				}
+			});
+		}),
+		sanitizeBody("*").escape(),
+		(req, res) => {
+			try {
+				const errors = validationResult(req);
+				var user = new UserModel(
+					{
+						firstName: req.body.firstName,
+						lastName: req.body.lastName,
+						email: req.body.email,
+						phoneNumber: req.body.phoneNumber
+					}
+				);
+	
+				if (!errors.isEmpty()) {
+					return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
+				}
+				else {
+					if(!mongoose.Types.ObjectId.isValid(req.params.id)){
+						return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
+					}else{
+						UserModel.findById(req.params.id, function (err, foundUser) {
+							if(foundUser === null){
+								return apiResponse.notFoundResponse(res,"User not exists with this id");
+							}else{
+								//update book.
+								UserModel.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, updatedUser) {
+									if (err) {
+										console.log("Error: ", err);
+										return apiResponse.ErrorResponse(res, err);
+									} else {
+										return apiResponse.successResponseWithData(res, "User updated Success.", updatedUser);
+									}
+								});
+								// UserModel.findByIdAndUpdate(req.params.id, user, {},function (err) {
+								// 	if (err) { 
+								// 		console.log("Error: ", err);
+								// 		return apiResponse.ErrorResponse(res, err); 
+								// 	}else{
+								// 		return apiResponse.successResponseWithData(res,"User updated Success.", user);
+								// 	}
+								// });
+							}
+						});
+					}
+				}
+			} catch (err) {
+				//throw error in json response with status 500. 
+				// console.log("Error: ", err);
+				return apiResponse.ErrorResponse(res, err);
+			}
+		}
+	];
