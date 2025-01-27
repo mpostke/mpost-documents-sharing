@@ -82,8 +82,9 @@ exports.listReceivingDocuments = async (req, res) => {
     try {
       const documents = await Document.find({
         receivers: {
-            $elemMatch: { email: req.user.email, read: false }
+        $elemMatch: { email: req.user.email, read: false }
         },
+        isDeleted: false
       }).populate('sender', 'firstName lastName email');
       console.log(req.user.email)
       res.status(200).json(documents);
@@ -151,6 +152,51 @@ exports.listReceivingDocuments = async (req, res) => {
     } catch (error) {
         console.log(error);
       res.status(500).json({ message: "Error marking document as read", error });
+    }
+  };
+
+  exports.deleteDocuments = async (req, res) => {
+    const { documentIds } = req.body;
+  
+    if (!Array.isArray(documentIds) || documentIds.length === 0) {
+      return res.status(400).json({ message: 'Invalid document IDs provided.' });
+    }
+  
+    try {
+      // Find documents based on IDs and ensure they belong to the logged-in user
+      const documents = await Document.find({
+        _id: { $in: documentIds },
+        sender: req.user._id,
+      });
+  
+      if (documents.length === 0) {
+        return res.status(404).json({ message: 'No documents found or access denied.' });
+      }
+  
+      const documentUpdates = [];
+  
+      // Process each document
+      for (const document of documents) {
+        const filePath = path.resolve(document.filePath);
+  
+        // Delete file from the uploads folder
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+  
+        // Mark the document as deleted
+        document.isDeleted = true;
+        document.deletedAt = new Date();
+        documentUpdates.push(document.save());
+      }
+  
+      // Wait for all updates to be saved
+      await Promise.all(documentUpdates);
+  
+      res.status(200).json({ message: 'Documents deleted successfully.'});
+    } catch (error) {
+      console.error('Error deleting documents:', error);
+      res.status(500).json({ message: 'Error deleting documents.', error });
     }
   };
   
