@@ -9,5 +9,6 @@ router.post("/verify-otp", AuthController.verifyConfirm);
 router.post("/resend-verify-otp", AuthController.resendConfirmOtp);
 router.put("/update-user/:id", AuthController.userUpdate);
 router.get("/user-details", AuthController.userDetails);
+router.post("/set-profile-image", AuthController.uploadProfileImage);
 
 module.exports = router;

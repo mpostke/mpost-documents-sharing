@@ -199,6 +199,8 @@ exports.listReceivingDocuments = async (req, res) => {
       res.status(500).json({ message: 'Error deleting documents.', error });
     }
   };
+
+
   
 
 exports.uploadMiddleware = upload.array("files", 10);

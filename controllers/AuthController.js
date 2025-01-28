@@ -10,6 +10,34 @@ const mailer = require("../helpers/mailer");
 const { constants } = require("../helpers/constants");
 const auth = require("../middlewares/jwt");
 var mongoose = require("mongoose");
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
+
+	// Set up multer for file upload
+	const storage = multer.diskStorage({
+		destination: function (req, file, cb) {
+			cb(null, "profile-image/");
+		},
+		filename: function (req, file, cb) {
+			cb(null, Date.now() + path.extname(file.originalname));
+		}
+	});
+
+	const fileFilter = (req, file, cb) => {
+		// Accept only image files
+		if (file.mimetype.startsWith("image/")) {
+			cb(null, true);
+		} else {
+			cb(new Error("Only image files are allowed!"), false);
+		}
+	};
+
+	const upload = multer({
+		storage: storage,
+		limits: { fileSize: 1 * 1024 * 1024 }, // 1MB file size limit
+		fileFilter: fileFilter
+	});
 
 /**
  * User registration.
@@ -130,7 +158,8 @@ exports.login = [
 											firstName: user.firstName,
 											lastName: user.lastName,
 											email: user.email,
-											phoneNumber: user.phoneNumber
+											phoneNumber: user.phoneNumber,
+											profileImage: user.profileImage
 										};
 										//Prepare JWT token for authentication
 										const jwtPayload = userData;
@@ -177,6 +206,7 @@ exports.login = [
 								_id: user._id,
 								firstName: user.firstName,
 								lastName: user.lastName,
+								profileImage: user.profileImage,
 								email: user.email,
 								phoneNumber: user.phoneNumber,
 								createdAt: user.createdAt,
@@ -365,6 +395,46 @@ exports.resendConfirmOtp = [
 			} catch (err) {
 				//throw error in json response with status 500. 
 				// console.log("Error: ", err);
+				return apiResponse.ErrorResponse(res, err);
+			}
+		}
+	];
+
+
+	/**
+	 * Upload profile image.
+	 *
+	 * @param {string}      profileImage
+	 *
+	 * @returns {Object}
+	 */
+	exports.uploadProfileImage = [
+		auth,
+		upload.single("profileImage"),
+		(req, res) => {
+			try {
+				if (!req.file) {
+					return apiResponse.validationErrorWithData(res, "Validation Error.", "No file uploaded");
+				}
+				UserModel.findById(req.user._id, (err, user) => {
+					if (err) {
+						return apiResponse.ErrorResponse(res, err);
+					}
+					if (user.profileImage) {
+						fs.unlink(user.profileImage, (err) => {
+							if (err) {
+								return apiResponse.ErrorResponse(res, err);
+							}
+						});
+					}
+				});
+				UserModel.findByIdAndUpdate(req.user._id, { profileImage: req.file.path }, { new: true }, (err, user) => {
+					if (err) {
+						return apiResponse.ErrorResponse(res, err);
+					}
+					return apiResponse.successResponse(res, "Profile image uploaded successfully.");
+				});
+			} catch (err) {
 				return apiResponse.ErrorResponse(res, err);
 			}
 		}

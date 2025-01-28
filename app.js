@@ -37,6 +37,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use('/uploads', express.static('uploads'));
+app.use('/profile-image', express.static('profile-image'));
 
 //To allow cross-origin requests
 app.use(cors());
