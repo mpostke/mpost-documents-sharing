@@ -26,6 +26,14 @@ exports.addMessage = [
     const newMessage = new Message({ documentId, senderEmail, message, replyTo });
     await newMessage.save();
 
+     const notification = new Notification({
+            user: document.sender,
+            title: "New message on document: " + document.documentName,
+            message: "New message on document: " + document.documentName + " from " + senderEmail,
+          });
+
+    await notification.save();
+
     return apiResponse.successResponseWithData(res, "Message added successfully", newMessage);
   } catch (error) {
     return apiResponse.ErrorResponse(res, error);
@@ -65,6 +73,13 @@ exports.getMessagesByDocument = async (req, res) => {
       if (!message.acknowledgment.includes(email)) {
         message.acknowledgment.push(email);
         await message.save();
+        const notification = new Notification({
+            user: document.sender,
+            title: "Acknowledged on document: " + document.documentName,
+            message: "New Acknowledged on document: " + document.documentName + " by " + email,
+          });
+          
+    await notification.save();
       }
       return apiResponse.successResponseWithData(res, "Message acknowledged successfully", messages);
     } catch (error) {
