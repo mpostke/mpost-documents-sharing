@@ -81,9 +81,7 @@ exports.listSentDocuments = async (req, res) => {
 exports.listReceivingDocuments = async (req, res) => {
     try {
       const documents = await Document.find({
-        receivers: {
-        $elemMatch: { email: req.user.email, read: false }
-        },
+        $or: [{ receivers: { $elemMatch: { email: req.user.email } }, forwardReceivers: { $elemMatch: { email: req.user.email } }}],
         isDeleted: false
       }).populate('sender', 'firstName lastName email');
       console.log(req.user.email)
@@ -126,7 +124,12 @@ exports.listReceivingDocuments = async (req, res) => {
       if (receiver) {
         receiver.read = true;
       }else{
-        return res.status(404).json({ message: "Reader email not found in allowed readers list." });
+        var forwardReceiver = document.forwardReceivers.find(r => r.email === readerEmail);
+        if (forwardReceiver) {
+            forwardReceiver.read = true;
+          }else{
+            return res.status(404).json({ message: "Reader email not found in allowed readers/forwards list." });
+          }
       }
 
   
@@ -152,6 +155,54 @@ exports.listReceivingDocuments = async (req, res) => {
     } catch (error) {
         console.log(error);
       res.status(500).json({ message: "Error marking document as read", error });
+    }
+  };
+
+  exports.forwardDocument = async (req, res) => {
+    const { forwardReceiversEmail } = req.body;
+
+    try {
+    console.log(req.body);
+
+    if(!mongoose.Types.ObjectId.isValid(req.params.id)){
+                        return res.status(400).json({ message: "Invalid document id in params" });
+                    }
+
+                    if(forwardReceiversEmail === ''){
+                        return res.status(400).json({ message: "Invalid reader email" });
+                    }
+      
+      const document = await Document.findById(req.params.id);
+
+  
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+
+      // Add new forward receivers
+      const newForwardReceivers = forwardReceiversEmail.split(',').map(email => ({
+        email: email.trim(),
+        read: false,
+      }));
+
+      document.forwardReceivers = document.forwardReceivers.concat(newForwardReceivers);
+      
+
+      await document.save();
+
+      // Create a notification for the sender
+    const notification = new Notification({
+        user: document.sender,
+        title: "Document Forwarded",
+        message: `document: ${document.documentName} has been forwarded to ${forwardReceiversEmail}`,
+      });
+
+      await notification.save();
+  
+      res.status(200).json({ message: "Document forwarded successfully!" });
+    } catch (error) {
+        console.log(error);
+      res.status(500).json({ message: "Error forwarding documents", error });
     }
   };
 

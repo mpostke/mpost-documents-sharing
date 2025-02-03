@@ -10,8 +10,13 @@ const documentSchema = new Schema(
         read: { type: Boolean, default: false }, // Whether the receiver has read the document
       },
     ],
+    forwardReceivers: [
+      {
+        email: { type: String, required: true }, // Email of the receiver
+        read: { type: Boolean, default: false }, // Whether the receiver has read the document
+      },
+    ],
     documentName: { type: String, required: true },
-
     filePath: { type: String, required: true },
     fileSize: { type: Number, required: true },
     isPublic: { type: Boolean, default: false }, // Whether the document is public
