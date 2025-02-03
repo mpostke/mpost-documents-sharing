@@ -43,7 +43,7 @@ exports.addMessage = [
 
 exports.getMessagesByDocument = async (req, res) => {
     try {
-      const messages = await Message.find({ documentId: req.params.documentId }).sort({ createdAt: 1 });
+      const messages = await Message.find({ documentId: req.params.documentId }).populate('replyTo', 'senderEmail message').sort({ createdAt: 1 });
       return apiResponse.successResponseWithData(res, "Message get successfully", messages);
     } catch (error) {
         return apiResponse.ErrorResponse(res, error);

@@ -81,9 +81,18 @@ exports.listSentDocuments = async (req, res) => {
 exports.listReceivingDocuments = async (req, res) => {
     try {
       const documents = await Document.find({
-        $or: [{ receivers: { $elemMatch: { email: req.user.email } }, forwardReceivers: { $elemMatch: { email: req.user.email } }}],
+        $or: [
+          { receivers: { $elemMatch: { email: req.user.email } } },
+          { forwardReceivers: { $elemMatch: { email: req.user.email } } }
+        ],
         isDeleted: false
-      }).populate('sender', 'firstName lastName email');
+      }).populate('sender', 'firstName lastName email phoneNumber');
+
+      // const documents = await Document.find({
+      //   $or: [{ receivers: { $elemMatch: { email: req.user.email } }}],
+      //   isDeleted: false
+      // }).populate('sender', 'firstName lastName email phoneNumber');
+
       console.log(req.user.email)
       res.status(200).json(documents);
     } catch (error) {
