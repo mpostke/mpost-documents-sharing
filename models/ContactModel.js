@@ -5,7 +5,7 @@ const contactSchema = Schema(
   {
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
-    email: { type: String, unique: true, sparse: true }, // Optional
+    email: { type: String, required: true }, // Optional
     phoneNumbers: [
       {
         title: { type: String, required: true }, // e.g., Home, Work, Mobile

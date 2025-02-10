@@ -89,7 +89,10 @@ exports.register = [
 							email: req.body.email,
 							password: hash,
 							confirmOTP: otp,
-							
+							phoneNumber: req.body.phoneNumber,
+							countryCode: req.bod.countryCode,
+							country: req.bod.country,
+							city: req.bod.city,
 						}
 					);
 					// Html email body
@@ -209,6 +212,9 @@ exports.login = [
 								profileImage: user.profileImage,
 								email: user.email,
 								phoneNumber: user.phoneNumber,
+								countryCode: user.countryCode,
+								country: user.country,
+								city: user.city,
 								createdAt: user.createdAt,
 								updateAt: user.updatedAt,
 							};
@@ -356,7 +362,10 @@ exports.resendConfirmOtp = [
 						firstName: req.body.firstName,
 						lastName: req.body.lastName,
 						email: req.body.email,
-						phoneNumber: req.body.phoneNumber
+						phoneNumber: req.body.phoneNumber,
+						countryCode: req.bod.countryCode,
+						country: req.bod.country,
+						city: req.bod.city,
 					}
 				);
 	

@@ -5,6 +5,8 @@ const fs = require('fs');
 var mongoose = require("mongoose");
 mongoose.set("useFindAndModify", false);
 const Notification = require('../models/NotificationModel');
+const apiResponse = require("../helpers/apiResponse");
+
 
 // Configure Multer for file uploads
 const storage = multer.diskStorage({
@@ -257,6 +259,54 @@ exports.listReceivingDocuments = async (req, res) => {
     } catch (error) {
       console.error('Error deleting documents:', error);
       res.status(500).json({ message: 'Error deleting documents.', error });
+    }
+  };
+
+
+
+  exports.removeEmailFromDocument = async (req, res) => {
+    const { email } = req.body;
+  
+    try {
+      const document = await Document.findById(req.params.id);
+      if (!document) {
+        return apiResponse.notFoundResponse(res,"Document not found");
+      }
+  
+      let emailRemovedFrom = []; // To track where the email was removed from
+  
+      // Remove from receivers if exists
+      const initialReceiversLength = document.receivers.length;
+      document.receivers = document.receivers.filter(receiver => receiver.email !== email);
+      if (initialReceiversLength !== document.receivers.length) {
+        emailRemovedFrom.push('receivers');
+      }
+  
+      // Remove from forwardReceivers if exists
+      const initialForwardReceiversLength = document.forwardReceivers.length;
+      document.forwardReceivers = document.forwardReceivers.filter(forwardReceiver => forwardReceiver.email !== email);
+      if (initialForwardReceiversLength !== document.forwardReceivers.length) {
+        emailRemovedFrom.push('forwardReceivers');
+      }
+  
+      if (emailRemovedFrom.length === 0) {
+        return apiResponse.notFoundResponse(res,"Email not found in receivers or forwardReceivers");
+      }
+  
+      await document.save();
+
+         // Create a notification for the sender
+    const notification = new Notification({
+      user: document.sender,
+      title: `${email} has checked-out`,
+      message: `${email} has been checked-out from ${document.documentName}.`,
+    });
+
+    await notification.save();
+
+      return apiResponse.successResponse(res, "Operation success");
+    } catch (error) {
+      return apiResponse.ErrorResponse(res, error);
     }
   };
 
