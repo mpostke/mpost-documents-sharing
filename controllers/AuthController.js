@@ -90,9 +90,9 @@ exports.register = [
 							password: hash,
 							confirmOTP: otp,
 							phoneNumber: req.body.phoneNumber,
-							countryCode: req.bod.countryCode,
-							country: req.bod.country,
-							city: req.bod.city,
+							countryCode: req.body.countryCode,
+							country: req.body.country,
+							city: req.body.city,
 						}
 					);
 					// Html email body
@@ -106,7 +106,10 @@ exports.register = [
 							firstName: user.firstName,
 							lastName: user.lastName,
 							email: user.email,
-							
+							phoneNumber: user.phoneNumber,
+							countryCode: user.countryCode,
+							country: user.country,
+							city: user.city
 						};
 						return apiResponse.successResponseWithData(res,"Registration Success.", userData);
 					});
@@ -363,9 +366,9 @@ exports.resendConfirmOtp = [
 						lastName: req.body.lastName,
 						email: req.body.email,
 						phoneNumber: req.body.phoneNumber,
-						countryCode: req.bod.countryCode,
-						country: req.bod.country,
-						city: req.bod.city,
+						countryCode: req.body.countryCode,
+						country: req.body.country,
+						city: req.body.city,
 					}
 				);
 	
@@ -443,6 +446,30 @@ exports.resendConfirmOtp = [
 					}
 					return apiResponse.successResponse(res, "Profile image uploaded successfully.");
 				});
+			} catch (err) {
+				return apiResponse.ErrorResponse(res, err);
+			}
+		}
+	];
+
+
+	exports.forgetPasswordRequest = [
+		(req, res) => {
+			try {
+				let otp = utility.randomNumber(4);
+				let html = "<p>Use this OTP to reset you password.</p><p>OTP: "+otp+"</p>";
+				mailer.send(
+						constants.confirmEmails.from, 
+						req.body.email,
+						"OTP to reset your password",
+						html
+					).then(function(){
+						return apiResponse.successResponse(res, "Email sent");
+
+					}).catch(err => {
+						console.log(err);
+						return apiResponse.ErrorResponse(res,err);
+					}) ;
 			} catch (err) {
 				return apiResponse.ErrorResponse(res, err);
 			}
