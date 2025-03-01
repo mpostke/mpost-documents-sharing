@@ -18,7 +18,7 @@ const upload = multer({ storage });
 // Upload and send a document
 exports.sendDocument = async (req, res) => {
     try {
-      const { receiversEmail, documentName, isPublic, isProtected, password } = req.body;
+      const { receiversEmail, documentName, isPublic, isProtected, password, documentType } = req.body;
   
       if (!req.files || req.files.length === 0) {
         return res.status(400).json({ message: "At least one file is required" });
@@ -35,6 +35,7 @@ exports.sendDocument = async (req, res) => {
 
         return new Document({
           sender: req.user._id, // Assuming `req.user` is populated by middleware
+          documentType: req.body.documentType,
           receivers: receiversEmail.split(',').map(email => ({
             email: email.trim(),
             read: false,
